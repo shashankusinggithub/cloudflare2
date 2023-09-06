@@ -6,9 +6,6 @@ on:
       - main
       - master
   pull_request:
-    branches:
-      - main
-      - master
 
 jobs:
   deploy:
@@ -33,11 +30,21 @@ jobs:
       - name: Build and Generate Static Nuxt App
         run: yarn generate
 
+      - name: Determine Environment (Production/Preview)
+        id: environment
+        run: |
+          if [[ $GITHUB_REF == "refs/heads/main" || $GITHUB_REF == "refs/heads/master" ]]; then
+            echo "::set-output name=environment::production"
+          else
+            echo "::set-output name=environment::preview"
+          fi
+
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: cloudflare
+          projectName: YOUR_PROJECT_NAME
           directory: dist # Nuxt.js static generate outputs to 'dist' directory
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ steps.environment.outputs.environment }}
